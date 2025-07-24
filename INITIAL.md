@@ -25,5 +25,6 @@ In `examples`, there are examples about a single model named cohere2:
 Take the following steps and complete the conversion task:
 1. Read all input files under `inputs` folder, list the files that need to be converted from Pytorch to MindSpore;
 2. Read all files under `output` folder. If it's empty, generate the output files using MindSpore. If there are partially converted MindSpore script available, edit it using diff and always ask for human evaluation.
-3. Read all files under `examples` folder, take the `cohere2` as a reference of configuration file and the test script.
-4. Write a new test script for the model in the `inputs` folder.
+3. After one Pytorch script has been converted to MindSpore, take a reflection step, review all global rules (Minimal Modification Principle, Device-Related Code, Framework Naming, Tokenizer Output, Gradient Checkpointing, Parameter Initialization, API mapping rules, and docstring rules), to find if there are remaining codes to be converted.
+4. Read all files under `examples` folder, take the `cohere2` as a reference of configuration file and the test script.
+5. Write a new test script for the model in the `inputs` folder.
