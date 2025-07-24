@@ -102,3 +102,6 @@ def c2p_dynamic_expand(c2p_pos, query_layer, relative_pos):
 	```
 ### keep the Tensor primitives unchanged, such as unsqueeze, view, copy_, etc. Exceptions are .expand.
 ### edit the torch.tensor or torch.xxxTensor to mindspore.Tensor in the docstring.
+### You should always change the name of torch.nn.Module.forward function to `construct` in mindspore.nn.Cell.construct. While for other function names that contain the string `forward`, you do not need to change it to `construct`.
+### You can replace `torch.no_grad` context manager with `mindpore._no_grad` context manager.
+
