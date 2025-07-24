@@ -100,8 +100,18 @@ def c2p_dynamic_expand(c2p_pos, query_layer, relative_pos):
 	def normal_(tensor: Parameter, mean: float = 0.0, std: float = 1.0) -> None:
         tensor.set_data(initializer(Normal(std, mean), tensor.shape, tensor.dtype))
 	```
-### keep the Tensor primitives unchanged, such as unsqueeze, view, copy_, etc. Exceptions are .expand.
-### edit the torch.tensor or torch.xxxTensor to mindspore.Tensor in the docstring.
-### You should always change the name of torch.nn.Module.forward function to `construct` in mindspore.nn.Cell.construct. While for other function names that contain the string `forward`, you do not need to change it to `construct`.
-### You can replace `torch.no_grad` context manager with `mindpore._no_grad` context manager.
 
+### **API mapping rules**
+
+#### keep the majority of Tensor primitives unchanged, such as unsqueeze, view, copy_, continguous, clone, rehsape, etc. Exceptions are .expand.
+
+#### You should always change the name of torch.nn.Module.forward function to `construct` in mindspore.nn.Cell.construct. While for other function names that contain the string `forward`, you do not need to change it to `construct`.
+#### You can replace `torch.no_grad` context manager with `mindpore._no_grad` context manager.
+#### Data type cast rules: torch.Tensor.bool() -> mindspore.Tensor.bool_(), torch.Tensor.int() -> mindspore.Tensor.to(mindspore.int32), torch.Tensor.long() -> mindspore.Tensor.to(mindspore.int64)
+#### Prefer to use mindspore.mint APIs. Do not change the mindspore.mint APIs to mindspore.ops APIs or mindspore.nn APIs.
+#### mindspore supports register_buffer, which works the same as `torch.register_buffer`.
+#### MindSpore Tensor does not support detach(). Replace torch.Tensor.detach() by mindspore.Tensor.clone().
+
+### **Docstring rules**
+#### In the docstring, change the torch.tensor or torch.xxxTensor to mindspore.Tensor. 
+#### If the docstring contains python code written in Torch, convert it to python code written in MindSpore.
