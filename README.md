@@ -24,7 +24,7 @@ This project provides a sophisticated automated conversion system that:
 Install the required dependencies:
 
 ```bash
-pip install libcst # for relu-based auto-conversion
+pip install libcst # For relu-based auto-conversion
 pip install torch  # For validation purposes
 pip install mindspore  # Target framework
 ```
@@ -92,7 +92,11 @@ Detailed steps include:
    └── modeling_mymodel.py  # Partially converted to MindSpore
    ```
 
-### Continue Conversion with Coding Agent
+There are other options for rule-based auto-conversion. Please refer to [MSConverter](https://github.com/zhtmike/MSConverter).
+
+You may continue the conversion process with a Coding Agent, which will apply additional conversion rules and complete the remaining transformations.
+
+### Step2: Continue Conversion with Coding Agent
 
 If you have partially converted files in the `outputs/` directory, the code agent will:
 - Detect existing MindSpore files
