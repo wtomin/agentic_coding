@@ -24,7 +24,7 @@ This project provides a sophisticated automated conversion system that:
 Install the required dependencies:
 
 ```bash
-pip install libcst # For relu-based auto-conversion
+pip install libcst # For rule-based auto-conversion
 pip install torch  # For validation purposes
 pip install mindspore  # Target framework
 ```
@@ -58,7 +58,7 @@ agentic_coding/
 
 ## Usage Examples
 
-### Step1: Relu-based Partial Conversion
+### Step1: Rule-based Partial Conversion
 
 Convert PyTorch models to MindSpore partially using the automated converter:
 
