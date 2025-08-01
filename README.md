@@ -96,7 +96,7 @@ There are other options for rule-based auto-conversion. Please refer to [MSConve
 
 You may continue the conversion process with a Coding Agent, which will apply additional conversion rules and complete the remaining transformations.
 
-### Step2: Continue Conversion with Coding Agent
+### Step2: Conversion with Coding Agent
 
 If you have partially converted files in the `outputs/` directory, the code agent will:
 - Detect existing MindSpore files
@@ -104,13 +104,48 @@ If you have partially converted files in the `outputs/` directory, the code agen
 - Complete remaining transformations
 - Generate diff reports for human review
 
-If you are using Claude Code, simpky input the following text in the terminal:
+The Role of INITIAL_PLAN.md: Guiding the Code Agent
+The INITIAL_PLAN.md file is the central blueprint that directs the code agent's entire conversion process. It is not just a set of instructions, but a detailed operational plan. When you instruct the agent to follow this plan, it initiates a structured workflow to ensure an accurate and high-quality migration.
 
-```bash
+Here is how the agent interprets and executes the plan:
+
+Analysis and Scoping: The agent begins by scanning the inputs and outputs directories as defined in the plan. This initial analysis allows it to scope the task:
+
+It identifies the target PyTorch files that require conversion.
+It detects if any MindSpore files already exist in outputs. If so, it recognizes this as a partially completed task and switches to an iterative, diff-based editing mode, ensuring it builds upon existing work rather than starting from scratch.
+Reference-Based Generation: The agent studies the examples section to understand the desired end state. The provided cohere2 example acts as a "Rosetta Stone," teaching the agent the target coding style, the expected file structure, and the correct format for configuration and testing scripts.
+
+Systematic Conversion and Reflection: Following the Workflow, the agent converts each file. After converting a script, it enters a crucial reflection step. It reviews its own work against a set of global principles (like the Minimal Modification Principle, API mapping rules, etc.) defined in the plan. This self-correction phase ensures that subtle, framework-specific details are not missed.
+
+Validation and Testing: Finally, the agent uses its understanding from the Reference section to generate a new test script for the converted model. This final step validates that the generated MindSpore model is functionally equivalent to the original PyTorch model, completing the development cycle.
+
+If you are using Claude Code, simply input the following text in the terminal to trigger this entire process:
+
+'''bash
 ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ >   Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-```
+'''
+
+Customizing INITIAL_PLAN.md for Your Task
+You can—and should—modify INITIAL_PLAN.md to fit the specific needs of your conversion project. A well-crafted plan leads to a more accurate and efficient conversion. Here’s how to tailor each section:
+
+Inputs Section:
+
+Purpose: To tell the agent which source files to convert.
+How to Modify: Place your source PyTorch model scripts and any relevant configuration files into the inputs/ directory. The agent will automatically detect and process them.
+Outputs Section:
+
+Purpose: To define the desired result of the conversion.
+How to Modify: You can specify the naming conventions for the output files here. For instance, you might instruct the agent that all converted MindSpore files should have a specific suffix or be placed in a particular subdirectory.
+Reference Section:
+
+Purpose: To provide a complete, high-quality example of a correctly converted model.
+How to Modify: This is the most effective way to guide the agent. If your target model has a unique structure or requires a specific testing methodology, create a small, representative example and place it in the examples/ folder. The agent will learn and replicate the patterns from your example, significantly improving the quality of the final output.
+Workflow Section:
+
+Purpose: To define the exact sequence of operations for the agent.
+How to Modify: For most standard conversions, the default workflow is sufficient. However, for complex projects (e.g., those with multiple interdependent models or custom validation steps), you can modify this section. For example, you could add a step to first convert a base model class before converting several child models that inherit from it, ensuring dependencies are handled correctly.
 
 ## Conversion Rules
 
