@@ -121,11 +121,11 @@ Validation and Testing: Finally, the agent uses its understanding from the Refer
 
 If you are using Claude Code, simply input the following text in the terminal to trigger this entire process:
 
-'''bash
+```bash
 ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ >   Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.                                   │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-'''
+```
 
 Customizing INITIAL_PLAN.md for Your Task
 You can—and should—modify INITIAL_PLAN.md to fit the specific needs of your conversion project. A well-crafted plan leads to a more accurate and efficient conversion. Here’s how to tailor each section:
