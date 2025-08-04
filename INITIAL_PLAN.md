@@ -36,6 +36,8 @@ def scan_and_categorize_inputs():
 
 For each file to be converted, refer to the rules in `CLAUDE.md` to convert the file. Always create a backup before writing, and ask for human to review the diff.
 
+During conversion, if the pytorch file is one of modeling, inference, training, and dataset scripts, please read the examples in `examples/modeling`, `examples/inference`, `examples/train`, and `examples/dataset` to find the reference code.
+
 
 ### PHASE 3: Structure Replication
 
@@ -64,6 +66,28 @@ auto_convert.py:
 # file.outputs/subfolder/model.py.backup (original)
 # Human can: edit outputs/subfolder/model.py directly or reject
 ```
+
+
+### Examples
+
+In `examples/` folder, there are some examples of python script conversion:
+1. `examples/modeling`:
+- `modeling_cohere2_torch.py`: Cohere2 model's torch script;
+- `modeling_cohere2.py`: Cohere2 model's MindSpore script;
+- `test_modeling_cohere2.py`: Test script for the Cohere2 model, which aims to compare the precision error between MindSpore and PyTorch.
+- `configuration_cohere2.py`: the configuration file for Cohere2 model, shared by both PyTorch and MindSpore.
+
+2. `examples/inference`:
+- `generate_torch.py`: an example of PyTorch inference script with Cohere2 Model;
+- `generate_ms.py`: an example of MindSpore inference script with Cohere2 Model.
+
+3. `examples/dataset`:
+- `README.md`: the README file for the difference between PyTorch and MindSpore in dataset definition;
+- `dataset_torch.py`: an example dataset definition for PyTorch;
+- `dataset.py`: an example dataset definition for MindSpore.
+
+4. `examples/train`:
+- `REAMDE.md`: the README file for the difference between PyTorch and MindSpore in training script;
 
 ## Workflow
 
