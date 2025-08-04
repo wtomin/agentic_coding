@@ -1,4 +1,4 @@
-# Create PRP for code conversion project
+# Create PRP (Product Requirements Prompt) for code conversion project
 
 ## TASK FILE $ARGUMENTS
 

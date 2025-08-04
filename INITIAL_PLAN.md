@@ -1,26 +1,16 @@
 # GOALS
 
 Given the input folders of pytorch python scripts (or some python scripts have been partially converted to mindspore), this tool should:
-1. Automatically find all python scripts that need conversion (Pytorch -> MindSpore). 
-2. Automatically convert all pytorch scripts to mindspore.
-3. Keep the output folder structure same as the input folder structure.
+1. Automatically find all python scripts that need conversion (Pytorch -> MindSpore), keep a track note of files to be converted named as "files_to_convert.md". 
+2. Automatically convert all pytorch scripts to mindspore. After one file is converted, you can cross-check the coverted file in "files_to_convert.md". 
+3. Complete the conversion and give a report, save the report in "report.md".
 
 
 # Input Processing 
 
 ### PHASE 1: Fast File Detection (Automated)
 
-```python
-def scan_and_categorize_inputs():
-    """
-    Discover all PyTorch files for conversion
-    Returns: list of relative file paths
-    """
-    files = get_torch_files_to_convert('inputs/')
-    return sorted(files['convert'])  # Deterministic order
-```
-
-`get_torch_files_to_convert` uses `libcst` to find all files that contain torch-related imports, for example:
+Use `libcst` or regular match to find all files that contain torch-related codes, for example:
 1. torch
 2. torchvision
 3. transformers/diffusers
@@ -31,44 +21,24 @@ def scan_and_categorize_inputs():
 8. vllm/sglang
 9. other libraries that use torch
 
+Save all files that contain torch-related codes into a to-do list, saved them to "files_to_convert.md".
+
+"files_to_convert.md" contains all files paths that need to be converted, recorded in a section named "Files". You should also create another section named "Edits" to record all edits to be made to each file.
 
 ### PHASE 2: Automatic Conversion with Diff Review
 
-For each file to be converted, refer to the rules in `CLAUDE.md` to convert the file. Always create a backup before writing, and ask for human to review the diff.
+#### Examples references:
 
-During conversion, if the pytorch file is one of modeling, inference, training, and dataset scripts, please read the examples in `examples/modeling`, `examples/inference`, `examples/train`, and `examples/dataset` to find the reference code.
+Read the examples scripts in `examples/`, and make a short summary on the conversion rules for modeling, data, training, and inference.
 
+Read the files in "files_to_convert.md" one by one. Firstly, categorize the files into one of the following categories:
+1. Modeling
+2. Data
+3. Training
+4. Inference
 
-### PHASE 3: Structure Replication
+For each file, recall the examples in corresponding categories before conversion.
 
-**GUARANTEE:** Every converted file maintains exact relative path
-```
-inputs/subfolder/model.py → outputs/subfolder/model.py
-inputs/utils/data.py → outputs/utils/data.py
-```
-
-## Critical Components
-
-### Folder Structure Automation
-```python
-auto_convert.py:
-- [ ] auto_scan() - return list[file_paths]
-- [ ] auto_convert() - apply to all files
-- [ ] create_diffs() - generate .diff files
-- [ ] backup_system() - handle .backup files
-- [ ] structure_mirror() - guarantee path preservation
-```
-
-### Human Review Integration
-```python
-# After conversion, human reviews:
-# file.outputs/subfolder/model.py.diff
-# file.outputs/subfolder/model.py.backup (original)
-# Human can: edit outputs/subfolder/model.py directly or reject
-```
-
-
-### Examples
 
 In `examples/` folder, there are some examples of python script conversion:
 1. `examples/modeling`:
@@ -89,9 +59,25 @@ In `examples/` folder, there are some examples of python script conversion:
 4. `examples/train`:
 - `REAMDE.md`: the README file for the difference between PyTorch and MindSpore in training script;
 
+#### Conversion 
+
+For each file to be converted, refer to the rules in `CLAUDE.md` to convert the file. Always ask for human to review the diff.
+
+In `outputs` folder, if a file with the same name exists, it means the file is partially converted using AST rules. You need to further convert it with the rules in `CLAUDE.md`.
+
+After the conversion is done, save the edits you made to the section named Edits in files_to_convert.md. Continue to read files_to_convert.md to the next file.
+
+### PHASE 3: Complete
+
+- Check the output files, and make sure they are correctly converted. No torch-related code should be left in the output files.
+- If there are errors, fix them and re-run the process.
+- If no errors, you should generate a conversion report based on the files_to_convert.md. Save the report to a file named conversion_report.md.
+
+
+
 ## Workflow
 
-
-1. Process input files: process all input files  → idenfity files to convert  → simply copy those files that are not to be converted to outputs
-2. Start automatic conversion: for each torch file, first save backup, then generate diffs → human reviews diffs → can modify outputs afterward
-3. Review final outputs folder, if any file is not converted, ask for manual review
+1. Process input files: process all input files  → idenfity files to convert  → save files paths to a file named files_to_convert.md
+2. Start automatic conversion: for each torch file, generate diffs → human reviews diffs → can modify outputs afterward  → update files_to_convert.md
+3. Review final outputs folder, if any file is not converted.
+4. Generate a report of all files converted, and all files not converted, based on files_to_convert.md.
