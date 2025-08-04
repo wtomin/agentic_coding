@@ -699,6 +699,9 @@ def post_process_code(code: str) -> str:
             code = code.replace("import mindspore as ms", "import mindspore as ms\nfrom mindspore import mint", 1)
         else:
             code = "from mindspore import mint\n" + code
+        
+    if "import mindspore as ms" not in code and "ms." in code:
+        code = "import mindspore as ms\n" + code
 
     return code
 
