@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 from typing import Set, Tuple
+import re
 
 import libcst as cst
 import libcst.matchers as m
@@ -407,7 +408,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         self.from_import_as_other = dict()
 
     def leave_Module(self, original_node, updated_node):
-        # 插入必要导入
+        # Insert necessary imports
         insert_lines = []
         if self.need_ms_import:
             insert_lines.append(
@@ -446,7 +447,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         return updated_node
 
     def leave_Assign(self, original_node: cst.Assign, updated_node: cst.Assign) -> cst.BaseStatement:
-        # 如果赋值左右完全一致，例如 tensor = tensor
+        # If the left and right sides of the assignment are identical, e.g., tensor = tensor
         if (
             isinstance(updated_node.value, cst.Name)
             and isinstance(updated_node.targets[0].target, cst.Name)
@@ -458,28 +459,28 @@ class TorchToMindsporeCST(cst.CSTTransformer):
     def leave_Attribute(self, original_node: cst.Attribute, updated_node: cst.Attribute) -> cst.BaseExpression:
         parent = self.get_metadata(cst.metadata.ParentNodeProvider, original_node, default=None)
 
-        # 1. 如果 Attribute 是 ImportAlias.name（import ... 语句中的完整属性链）
+        # 1. If Attribute is ImportAlias.name (full attribute chain in an import ... statement)
         if isinstance(parent, cst.ImportAlias):
-            # 只在这个 ImportAlias 的 name 是当前节点时才处理
+            # Only process if the name of this ImportAlias is the current node
             if parent.name is original_node:
-                # _get_fullname 返回完整链，如 torch.utils.checkpoint
+                # _get_fullname returns the full chain, e.g., torch.utils.checkpoint
 
                 full = self._get_fullname(updated_node)
                 # print(parent.asname)
                 if parent.asname is not None:
-                    alias_name = parent.asname.name.value  # 获取 as 后的名字，如 "nn"
+                    alias_name = parent.asname.name.value  # Get the name after as, e.g., "nn"
                     self.import_as_other[alias_name] = full
                 mapped = self._map_fullname(full, original_node)
                 if mapped:
                     return self._str_to_attr(mapped)
                 return updated_node
             else:
-                # 说明是中间节点（比如 torch 或 utils），跳过处理，直接返回 updated_node
+                # This means it's an intermediate node (like torch or utils), skip processing and return updated_node
                 return updated_node
 
-        # 2. 如果 Attribute 是 ImportFrom.module 里的属性（from ... import ...）
+        # 2. If Attribute is an attribute in ImportFrom.module (from ... import ...)
         if isinstance(parent, cst.ImportFrom):
-            # 这部分统一交给 leave_ImportFrom 处理，当前直接跳过
+            # This part is handled by leave_ImportFrom, so we skip it here
             return updated_node
 
         full = self._get_fullname(updated_node)
@@ -508,7 +509,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
                     value=cst.Attribute(value=target, attr=cst.Name("shape")),
                     slice=[cst.SubscriptElement(slice=updated_node.args[0].value)],
                 )
-        # 处理 super().forward() → super().construct()
+        # Handle super().forward() -> super().construct()
         if m.matches(updated_node.func, m.Attribute(attr=m.Name("forward"))):
             if m.matches(updated_node.func.value, m.Call(func=m.Name("super"))):
                 return updated_node.with_changes(
@@ -556,12 +557,12 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         return updated_node.with_changes(names=new_aliases)
 
     def get_importfrom_asname(self, original_node: cst.ImportFrom):
-        # 获取导入来源（如 torch.nn）
+        # Get the import source (e.g., torch.nn)
         base_module = self._get_fullname(original_node.module)
 
         for alias in original_node.names:
             if isinstance(alias, cst.ImportAlias):
-                # 获取被导入的名字（如 functional）
+                # Get the imported name (e.g., functional)
                 imported_name = alias.name.value if isinstance(alias.name, cst.Name) else self._get_fullname(alias.name)
                 full_name = f"{base_module}.{imported_name}"
                 if full_name.startswith("torch.") and alias.asname:
@@ -572,12 +573,10 @@ class TorchToMindsporeCST(cst.CSTTransformer):
                             skip = True
                             break
                         if v.startswith(full_name) and len(v) > len(full_name):
-                            # 移除旧的短前缀
+                            # Remove old short prefixes
                             keys_to_remove = [k for k, val in self.from_import_as_other.items() if val == v]
                             for k in keys_to_remove:
                                 del self.from_import_as_other[k]
-                    if not skip:
-                        self.from_import_as_other[asname] = full_name
                 elif full_name.startswith("torch.") and not alias.asname:
                     asname = full_name.split(".")[-1]
                     self.from_import_as_other[asname] = full_name
@@ -605,7 +604,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         pos = self.get_metadata(PositionProvider, node)
         if name.split(".")[0] in self.import_as_other:
             name = self.import_as_other[name.split(".")[0]] + "." + ".".join(name.split(".")[1:])
-        if name.split(".")[0] in self.from_import_as_other:  # torch.nn.functional.softmax as soft->soft()
+        if name.split(".")[0] in self.from_import_as_other:  # e.g. from torch.nn.functional import softmax as soft -> soft()
             name = self.from_import_as_other[name.split(".")[0]] + "." + ".".join(name.split(".")[1:])
         if name in mint_nn_map:
             self.need_mint_import = True
@@ -636,10 +635,10 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         temp = {}
         for filename, lineno, name in self.unmapped_details:
             key = (filename, lineno)
-            # 同一行，已替换则跳过
+            # Same line, skip if already replaced
             if any(filename == f and lineno == l for f, l, _ in self.has_map_details):
                 continue
-            # torch.nn;torch.nn.functional;删除torch.nn
+            # For torch.nn and torch.nn.functional, remove torch.nn
             if key not in temp:
                 temp[key] = name
             else:
@@ -647,7 +646,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
                     temp[key] = name
 
         for (filename, lineno), name in temp.items():
-            # 文件中如过有多处同算子的替换，则跳过，避免日志爆炸
+            # If there are multiple replacements of the same operator in the file, skip to avoid log explosion
             if any(filename == f and name == n for f, _, n in new_details):
                 continue
             if any(name in full for _, full in self.import_as_other.items()):
@@ -658,7 +657,7 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         self.unmapped_details = new_details
 
     def _get_fullname(self, node: cst.CSTNode) -> str:
-        """递归解析 Attribute/Name 组成的链，避免依赖 .code 属性。"""
+        """Recursively parse a chain of Attribute/Name nodes, avoiding reliance on the .code attribute."""
         if isinstance(node, cst.Name):
             return node.value
         if isinstance(node, cst.Attribute):
@@ -675,12 +674,41 @@ class TorchToMindsporeCST(cst.CSTTransformer):
         return expr
 
 
+def post_process_code(code: str) -> str:
+    """
+    Apply string replacements to the converted code.
+    """
+    # import mindspore -> import mindspore as ms
+    lines = code.split("\n")
+    new_lines = []
+    for line in lines:
+        if line.strip() == "import mindspore":
+            new_lines.append("import mindspore as ms")
+        else:
+            new_lines.append(line)
+    code = "\n".join(new_lines)
+
+    # mindspore. -> ms.
+    code = re.sub(r"(\W)mindspore\.", r"\1ms.", code)
+
+    # ms.mint -> mint
+    code = code.replace("ms.mint.", "mint.")
+
+    if "from mindspore import mint" not in code and "mint." in code:
+        if "import mindspore as ms" in code:
+            code = code.replace("import mindspore as ms", "import mindspore as ms\nfrom mindspore import mint", 1)
+        else:
+            code = "from mindspore import mint\n" + code
+
+    return code
+
+
 def convert_file(path: str, transformer_class):
     try:
         with open(path, "r", encoding="utf-8") as f:
             source = f.read()
     except Exception as e:
-        print(f"[ERROR] 处理失败 {path}: {e}")
+        print(f"[ERROR] Failed to process {path}: {e}")
 
     try:
         all_unmapped: Set[Tuple[str, int, str]] = set()
@@ -689,19 +717,22 @@ def convert_file(path: str, transformer_class):
         transformer = transformer_class(filename=path)
         modified_tree = wrapper.visit(transformer)
         transformer._dedup_unmapped_details()
+
+        modified_code = modified_tree.code
+        modified_code = post_process_code(modified_code)
         with open(path, "w", encoding="utf-8") as f:
-            f.write(modified_tree.code)
+            f.write(modified_code)
         unmapped = transformer.unmapped_details
         all_unmapped.update(unmapped)
         if all_unmapped:
             for file, line, name in sorted(all_unmapped):
                 print(f"- {name} ({file}:{line})")
     except Exception as e:
-        print(f"[ERROR] 处理失败 {path}: {e}")
+        print(f"[ERROR] Failed to process {path}: {e}")
 
 
 def copy_and_convert(src_root: str, dst_root: str):
-    shutil.copytree(src_root, dst_root)
+    shutil.copytree(src_root, dst_root, dirs_exist_ok=True)
     print(
         "The following interfaces have not been replaced yet. Please modify the corresponding code based on the location indicated in the logs."
     )
@@ -712,10 +743,15 @@ def copy_and_convert(src_root: str, dst_root: str):
                 convert_file(filepath, TorchToMindsporeCST)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--src_root", type=str, required=True)
     parser.add_argument("--dst_root", type=str, required=True)
     args = parser.parse_args()
 
     copy_and_convert(args.src_root, args.dst_root)
+    print(f"[+] Converted folder {args.src_root} to {args.dst_root}")
+
+
+if __name__ == "__main__":
+    main()
