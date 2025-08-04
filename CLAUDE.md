@@ -196,6 +196,7 @@ q = q.permute(0, 2, 3, 1).reshape(b, 1, h*w, c).contiguous()
 #### mindspore supports register_buffer, which works the same as `torch.register_buffer`.
 #### MindSpore Tensor does not support detach(). Replace torch.Tensor.detach() by mindspore.Tensor.clone().
 #### If importing transformers or diffusers, replace `import transformers` by `import mindone.transformers`. Similarly, replace `import diffusers` by `import mindone.diffusers`.		
+#### MindSpore does not support offload. Do not call `ms.Tensor.cpu()` or `ms.Tensor.to("cpu")`.
 
 ### **Docstring rules**
 #### In the docstring, change the torch.tensor or torch.xxxTensor to mindspore.Tensor. 
