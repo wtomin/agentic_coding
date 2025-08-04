@@ -104,7 +104,10 @@ If you have partially converted files in the `outputs/` directory, the code agen
 - Complete remaining transformations
 - Generate diff reports for human review
 
-The Role of INITIAL_PLAN.md: Guiding the Code Agent
+<details>
+
+<summary> The Role of INITIAL_PLAN.md: Guiding the Code Agent </summary>
+
 The INITIAL_PLAN.md file is the central blueprint that directs the code agent's entire conversion process. It is not just a set of instructions, but a detailed operational plan. When you instruct the agent to follow this plan, it initiates a structured workflow to ensure an accurate and high-quality migration.
 
 Here is how the agent interprets and executes the plan:
@@ -118,18 +121,13 @@ Reference-Based Generation: The agent studies the examples section to understand
 Systematic Conversion and Reflection: Following the Workflow, the agent converts each file. After converting a script, it enters a crucial reflection step. It reviews its own work against a set of global principles (like the Minimal Modification Principle, API mapping rules, etc.) defined in the plan. This self-correction phase ensures that subtle, framework-specific details are not missed.
 
 Validation and Testing: Finally, the agent uses its understanding from the Reference section to generate a new test script for the converted model. This final step validates that the generated MindSpore model is functionally equivalent to the original PyTorch model, completing the development cycle.
+</details>
 
-If you are using Claude Code, simply input the following text in the terminal to trigger this entire process:
+<details>
+   
+<summary> Customizing INITIAL_PLAN.md for Your Task </summary>
 
-```bash
-╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ >   Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.                                   │
-╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-```
-
-Customizing INITIAL_PLAN.md for Your Task
 You can—and should—modify INITIAL_PLAN.md to fit the specific needs of your conversion project. A well-crafted plan leads to a more accurate and efficient conversion. Here’s how to tailor each section:
-
 Inputs Section:
 
 Purpose: To tell the agent which source files to convert.
@@ -146,6 +144,16 @@ Workflow Section:
 
 Purpose: To define the exact sequence of operations for the agent.
 How to Modify: For most standard conversions, the default workflow is sufficient. However, for complex projects (e.g., those with multiple interdependent models or custom validation steps), you can modify this section. For example, you could add a step to first convert a base model class before converting several child models that inherit from it, ensuring dependencies are handled correctly.
+</details>
+
+If you are using Claude Code, simply input the following text in the terminal to trigger this entire process base on the current `INITIAL_PLAN.md`:
+
+```bash
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ >   Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.                                   │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
 
 ## Conversion Rules
 
