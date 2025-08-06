@@ -1,120 +1,107 @@
-# Agentic Coding: PyTorch to MindSpore Converter
+# Agentic Code Conversion Tool
 
-An automated code conversion tool that transforms PyTorch models and configurations to MindSpore.
+An agentic tool for automated conversion of PyTorch code to MindSpore, allowing various inputs.
 
 ## Overview
 
-This project provides a sophisticated automated conversion system that:
+This project provides a comprehensive solution for converting PyTorch-based machine learning code to MindSpore, with a focus on maintaining code functionality while adapting to MindSpore's implementation. The tool uses a combination of AST (Abstract Syntax Tree) transformation and pattern matching to ensure accurate conversions.
 
-- **Converts PyTorch models to MindSpore**: Automatically transforms PyTorch model architectures, preserving functionality and precision
-- **Handles configuration files**: Processes PyTorch configuration files 
-- **Maintains code structure**: Uses the minimal modification principle to preserve variable names and overall code structure
-- **Generates test scripts**: Creates comprehensive test scripts to validate conversion accuracy
-- **Leverages AI assistance**: Integrates with Claude Code (or other Coding Agent, such as Cursor) for complex conversion scenarios.
+## Quick Start
 
-## Installation
-
-### Prerequisites
-- Python 3.7 or higher
-- PyTorch (for testing and validation)
-- MindSpore (target framework)
-- Coding Agent (such as Claude or Cursor)
-
-### Dependencies
-Install the required dependencies:
-
+Firstly, please prepare a torch repository to be converted:
 ```bash
-pip install libcst # For rule-based auto-conversion
-pip install torch  # For validation purposes
-pip install mindspore  # Target framework
-```
-
-### Clone the Repository
-```bash
-git clone https://github.com/your-username/agentic_coding.git
+git clone https://github.com/wtomin/agentic_coding
+git checkout flex-inputs
 cd agentic_coding
+cd example_inputs 
+bash download.sh  # download an example torch repository https://github.com/ivanwhaf/yolov1-pytorch/tree/master
+cd ..
+mv example_inputs/ inputs/
 ```
+
+Then you can generate task files with:
+```bash
+python task_generator.py
+```
+Here is the output:
+```bash
+Starting task generation for directory: inputs
+Scanning 10 Python files...
+[-] Skipped inputs/yolov1-pytorch/detect.py (no PyTorch usage detected)
+[+] Created task for inputs\yolov1-pytorch\train.py (category: training)
+[+] Created task for inputs\yolov1-pytorch\models\yolov1.py (category: modeling)
+[-] Skipped inputs/yolov1-pytorch/models/__init__.py (no PyTorch usage detected)
+[+] Created task for inputs\yolov1-pytorch\utils\datasets.py (category: dataset)
+[-] Skipped inputs/yolov1-pytorch/utils/draw_gt.py (no PyTorch usage detected)
+[+] Created task for inputs\yolov1-pytorch\utils\loss.py (category: training)
+[-] Skipped inputs/yolov1-pytorch/utils/modify_label.py (no PyTorch usage detected)
+[+] Created task for inputs\yolov1-pytorch\utils\util.py (category: others)
+[-] Skipped inputs/yolov1-pytorch/utils/__init__.py (no PyTorch usage detected)
+
+=== Task Generation Summary ===
+Total tasks generated: 5
+Categories: {'modeling': 1, 'dataset': 1, 'training': 2, 'others': 1}
+Priority distribution: {'1': 1, '3': 1, '4': 2, '5': 1}
+
+[+] Generated 5 conversion tasks
+[+] Task files saved to: tasks
+```
+
+In the `tasks/` folder, there are multiple task file with `.json` extension, which corresponds to the python script to be converted.
+
+Finally, you can start the conversion with the coding agent, like:
+```text
+The current task file is @tasks/task_001.json. Read @CONVERT.md and start the conversion task.
+```
+This will convert the python file in `tasks/task_001.json`. We recommend to convert the files in a parallel and independent manner, especially when the number of tasks files is large.
+
+If the number of tasks files is small, you may consider asking the coding agent to convert all files listed in `tasks\task_summary.json`. The performance maybe dergaded when the context length is too long.
+
 
 ## Project Structure
 
 ```
 agentic_coding/
-├── auto_convert.py          # Main conversion script
-├── inputs/                  # Input PyTorch files to be converted
-├── outputs/                 # Generated MindSpore files
-├── examples/                # Reference examples (cohere2 model)
-│   ├── configuration_cohere2.py
-│   ├── modeling_cohere2_torch.py
-│   ├── modeling_cohere2.py
-│   └── test_modeling_cohere2.py
-├── example_inputs/         # Sample input files for testing
-│   ├── configuration_ibert.py
-│   ├── modeling_ibert.py
-│   └── quant_modules.py
-├── CLAUDE.md              # Detailed conversion rules and guidelines
-├── INITIAL_PLAN.md        # Project workflow and methodology
-└── README.md              # This file
+├── task_generator.py        # Main task generation orchestrator
+├── convert_folder.py        # Bulk conversion implementation
+├── convert_single_file.py   # Single file conversion utility
+├── examples/               # Example code and conversion references
+│   ├── dataset/           # Dataset-related examples
+│   ├── inference/         # Inference code examples
+│   ├── modeling/         # Model architecture examples
+│   └── training/         # Training script examples
+├── example_inputs/       # Directory for sample PyTorch files
+├── inputs/                # Directory for input PyTorch files
+└── outputs/              # Directory for converted MindSpore files
 ```
 
-## Usage Examples
+## Documentation
 
-### Step1: Rule-based Partial Conversion
+### Task Generator (`task_generator.py`)
+- Scans input files for PyTorch usage
+- Categorizes files based on content and path
+- Generates prioritized conversion tasks
+- Supports task tracking and management
 
-Convert PyTorch models to MindSpore partially using the automated converter:
+### Rule-based Conversion (`convert_folder.py` and `convert_single_file.py`)
+- Implements the core conversion logic using libcst
+- Maintains comprehensive API mapping dictionaries
+- Handles syntax transformation and import management
+- Provides post-processing capabilities
 
-```bash
-python auto_convert.py --src_root ./inputs --dst_root ./outputs
-```
+### Sophisticated Conversion `CONVERT.md`
+- Accept a json task file as input
+- Categorize pytorch script to different categories, and refer to different examples
+- Validation and Error Hanlding
+- Logging the detailed converison summary in `logs/`
 
-### Parameters
-- `--src_root`: Directory containing PyTorch source files (model files and configurations)
-- `--dst_root`: Target directory for converted MindSpore files
-
-
-Detailed steps include:
-
-1. **Place your PyTorch files in the `inputs/` directory:**
-   ```
-   inputs/
-   ├── configuration_mymodel.py
-   └── modeling_mymodel.py
-   ```
-
-2. **Run the conversion:**
-   ```bash
-   python auto_convert.py --src_root ./inputs --dst_root ./outputs
-   ```
-
-3. **Check the converted files in `outputs/`:**
-   ```
-   outputs/
-   ├── configuration_mymodel.py
-   └── modeling_mymodel.py  # Partially converted to MindSpore
-   ```
-
-There are other options for rule-based auto-conversion. Please refer to [MSConverter](https://github.com/zhtmike/MSConverter).
-
-You may continue the conversion process with a Coding Agent, which will apply additional conversion rules and complete the remaining transformations.
-
-### Step2: Continue Conversion with Coding Agent
-
-If you have partially converted files in the `outputs/` directory, the code agent will:
-- Detect existing MindSpore files
-- Apply additional conversion rules
-- Complete remaining transformations
-- Generate diff reports for human review
-
-If you are using Claude Code, simpky input the following text in the terminal:
-
-```bash
-╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ >   Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.                                   │
-╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
-```
 
 ## Conversion Rules
 
 The converter follows comprehensive rules defined in `CLAUDE.md`:
+
+<details>
+<summary>details about CLAUDE.md</summary>
 
 ### Core Principles
 - **Minimal Modification**: Preserve variable names and code structure
@@ -173,13 +160,8 @@ The tool generates test scripts that:
 - Test edge cases and different input scenarios
 
 
-## Examples
+</details>
 
-Refer to the `examples/` directory for complete conversion examples:
-
-- **cohere2 Model**: Complete example showing PyTorch to MindSpore conversion
-- **Configuration Handling**: How configuration files are processed
-- **Test Script Generation**: Validation and testing approaches
 
 ## Troubleshooting
 
@@ -195,21 +177,6 @@ The tool may require human review for:
 - Complex custom operations
 - Unsupported PyTorch features
 - Domain-specific modifications
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add your improvements
-4. Test thoroughly with example models
-5. Submit a pull request
-
-## Documentation
-
-- **`CLAUDE.md`**: Comprehensive conversion rules and technical guidelines
-- **`INITIAL_PLAN.md`**: Project methodology and workflow
-- **Examples**: Reference implementations in `examples/` directory
-
 
 
 ## Support

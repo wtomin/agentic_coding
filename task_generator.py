@@ -213,7 +213,7 @@ class TaskGenerator:
     def save_task_files(self, tasks: List[Dict]) -> None:
         """Save individual task JSON files"""
         for task in tasks:
-            filename = f"{task['task_id']}_p{task['priority']}.json"
+            filename = f"{task['task_id']}.json"
             filepath = self.output_dir / filename
             
             with open(filepath, 'w', encoding='utf-8') as f:
