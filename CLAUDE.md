@@ -101,6 +101,90 @@ def c2p_dynamic_expand(c2p_pos, query_layer, relative_pos):
         tensor.set_data(initializer(Normal(std, mean), tensor.shape, tensor.dtype))
 	```
 
+### **Scaled Dot Product Attention**:
+Mindspore does not have `scaled_dot_product_attention` as `torch.nn.functional.scaled_dot_product_attention`. `torch.nn.functional.scaled_dot_product_attention`. can be replaced by the following code snippet:
+```python
+import mindspore as ms
+import numpy as np
+_MIN_FP16 = ms.tensor(np.finfo(np.float16).min, dtype=ms.float16)
+_MIN_FP32 = ms.tensor(np.finfo(np.float32).min, dtype=ms.float32)
+_MIN_FP64 = ms.tensor(np.finfo(np.float64).min, dtype=ms.float64)
+_MIN_BF16 = ms.tensor(float.fromhex("-0x1.fe00000000000p+127"), dtype=ms.bfloat16)
+_MAX_FP16 = ms.tensor(np.finfo(np.float16).max, dtype=ms.float16)
+_MAX_FP32 = ms.tensor(np.finfo(np.float32).max, dtype=ms.float32)
+_MAX_FP64 = ms.tensor(np.finfo(np.float64).max, dtype=ms.float64)
+_MAX_BF16 = ms.tensor(float.fromhex("0x1.fe00000000000p+127"), dtype=ms.bfloat16)
+
+
+_DTYPE_2_MIN = {
+    ms.float16: _MIN_FP16,
+    ms.float32: _MIN_FP32,
+    ms.float64: _MIN_FP64,
+    ms.bfloat16: _MIN_BF16,
+}
+
+_DTYPE_2_MAX = {
+    ms.float16: _MAX_FP16,
+    ms.float32: _MAX_FP32,
+    ms.float64: _MAX_FP64,
+    ms.bfloat16: _MAX_BF16,
+}
+
+def scaled_dot_product_attention(
+    query, key, value, attn_mask=None, dropout_p=0.0, is_causal=False, dtype=None, training=True
+):
+    # force dtype(fp16 or bf16) precision calculation
+    ori_dtype = query.dtype
+    if dtype is not None:
+        query, key, value = query.astype(dtype), key.astype(dtype), value.astype(dtype)
+
+    if attn_mask is not None:
+        if attn_mask.dtype == ms.bool_:
+            attn_mask = attn_mask.to(ms.float32)
+            attn_mask = attn_mask.masked_fill((1 - attn_mask).to(ms.bool_), _DTYPE_2_MIN[ms.float16])
+        attn_mask = attn_mask.to(query.dtype)
+
+        attn_weight = mint.nn.functional.softmax(
+            mint.matmul(query, mint.transpose(key, -2, -1)) / (query.shape[-1] ** 0.5) + attn_mask,
+            dim=-1,
+            dtype=ms.float32,
+        ).astype(query.dtype)
+    else:
+        L, S = query.shape[-2], key.shape[-2]
+        attn_bias = mint.zeros((L, S), dtype=query.dtype)
+        if is_causal:
+            # assert attn_mask is None
+            temp_mask = mint.ones((L, S), dtype=ms.bool_).tril(diagonal=0)
+            attn_bias = ops.masked_fill(attn_bias, mint.logical_not(temp_mask), _DTYPE_2_MIN[ms.float16])
+            attn_bias = attn_bias.to(query.dtype)
+
+        attn_weight = mint.nn.functional.softmax(
+            mint.matmul(query, mint.transpose(key, -2, -1)) / (query.shape[-1] ** 0.5) + attn_bias,
+            dim=-1,
+            dtype=ms.float32,
+        ).astype(query.dtype)
+
+    attn_weight = mint.nn.functional.dropout(attn_weight, p=dropout_p, training=training)
+
+    out = mint.matmul(attn_weight, value)
+    out = out.astype(ori_dtype)
+
+    return out
+
+```
+
+
+### einops rearrange
+
+MindSpore does not support `rearrange` from `einops`. Use reshape and permute operators to implement a equivalent function:
+[INPUT]
+b, c, h, w = q.shape
+q = rearrange(q, "b c h w -> b 1 (h w) c").contiguous()
+[OUPTUT]
+b, c, h, w = q.shape
+# q = rearrange(q, "b c h w -> b 1 (h w) c").contiguous() # keep original code for debuggin
+q = q.permute(0, 2, 3, 1).reshape(b, 1, h*w, c).contiguous()
+
 ### **API mapping rules**
 
 #### keep the majority of Tensor primitives unchanged, such as unsqueeze, view, copy_, continguous, clone, rehsape, etc. Exceptions are .expand.
@@ -111,6 +195,8 @@ def c2p_dynamic_expand(c2p_pos, query_layer, relative_pos):
 #### Prefer to use mindspore.mint APIs. Do not change the mindspore.mint APIs to mindspore.ops APIs or mindspore.nn APIs.
 #### mindspore supports register_buffer, which works the same as `torch.register_buffer`.
 #### MindSpore Tensor does not support detach(). Replace torch.Tensor.detach() by mindspore.Tensor.clone().
+#### If importing transformers or diffusers, replace `import transformers` by `import mindone.transformers`. Similarly, replace `import diffusers` by `import mindone.diffusers`.		
+#### MindSpore does not support offload. Do not call `ms.Tensor.cpu()` or `ms.Tensor.to("cpu")`.
 
 ### **Docstring rules**
 #### In the docstring, change the torch.tensor or torch.xxxTensor to mindspore.Tensor. 
