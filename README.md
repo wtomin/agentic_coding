@@ -1,6 +1,6 @@
 # Agentic Coding: PyTorch to MindSpore Converter
 
-An automated code conversion tool that transforms PyTorch models and configurations to MindSpore.
+An automated code conversion tool that transforms PyTorch models and configurations to MindSpore, especially designed for `transformers`.
 
 ## Overview
 
@@ -10,7 +10,6 @@ This project provides a sophisticated automated conversion system that:
 - **Handles configuration files**: Processes PyTorch configuration files 
 - **Maintains code structure**: Uses the minimal modification principle to preserve variable names and overall code structure
 - **Generates test scripts**: Creates comprehensive test scripts to validate conversion accuracy
-- **Leverages AI assistance**: Integrates with Claude Code (or other Coding Agent, such as Cursor) for complex conversion scenarios.
 
 ## Installation
 
@@ -33,6 +32,17 @@ pip install mindspore  # Target framework
 ```bash
 git clone https://github.com/your-username/agentic_coding.git
 cd agentic_coding
+```
+## Quick Start
+
+```bash
+mv example_inputs/ inputs/
+python auto_convert.py --src_root ./inputs --dst_root ./outputs  # partially convert torch scripts to mindspore
+```
+
+Then, start the conversion with your coding agent like this:
+```
+Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.
 ```
 
 ## Project Structure
@@ -66,7 +76,7 @@ Convert PyTorch models to MindSpore partially using the automated converter:
 python auto_convert.py --src_root ./inputs --dst_root ./outputs
 ```
 
-### Parameters
+**Parameters**:
 - `--src_root`: Directory containing PyTorch source files (model files and configurations)
 - `--dst_root`: Target directory for converted MindSpore files
 
@@ -159,6 +169,9 @@ If you are using Claude Code, simply input the following text in the terminal to
 
 The converter follows comprehensive rules defined in `CLAUDE.md`:
 
+<details>
+<summary>details about CLAUDE.md</summary>
+
 ### Core Principles
 - **Minimal Modification**: Preserve variable names and code structure
 - **Device Removal**: Eliminate CUDA-specific device handling
@@ -216,13 +229,15 @@ The tool generates test scripts that:
 - Test edge cases and different input scenarios
 
 
-## Examples
+</details>
 
-Refer to the `examples/` directory for complete conversion examples:
+## Documentation
 
-- **cohere2 Model**: Complete example showing PyTorch to MindSpore conversion
-- **Configuration Handling**: How configuration files are processed
-- **Test Script Generation**: Validation and testing approaches
+- **`CLAUDE.md`**: Comprehensive conversion rules and technical guidelines
+- **`INITIAL_PLAN.md`**: Project methodology and workflow
+- **Examples**: Reference implementations in `examples/` directory
+
+
 
 ## Troubleshooting
 
@@ -238,21 +253,6 @@ The tool may require human review for:
 - Complex custom operations
 - Unsupported PyTorch features
 - Domain-specific modifications
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add your improvements
-4. Test thoroughly with example models
-5. Submit a pull request
-
-## Documentation
-
-- **`CLAUDE.md`**: Comprehensive conversion rules and technical guidelines
-- **`INITIAL_PLAN.md`**: Project methodology and workflow
-- **Examples**: Reference implementations in `examples/` directory
-
 
 
 ## Support
