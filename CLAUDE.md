@@ -176,14 +176,36 @@ def scaled_dot_product_attention(
 
 ### einops rearrange
 
-MindSpore does not support `rearrange` from `einops`. Use reshape and permute operators to implement a equivalent function:
+MindSpore Tensor does not support operators from `einops`, like `rearrange`, `repeat`. Use reshape and permute operators to implement a equivalent function:
 [INPUT]
 b, c, h, w = q.shape
 q = rearrange(q, "b c h w -> b 1 (h w) c").contiguous()
 [OUPTUT]
 b, c, h, w = q.shape
-# q = rearrange(q, "b c h w -> b 1 (h w) c").contiguous() # keep original code for debuggin
+# q = rearrange(q, "b c h w -> b 1 (h w) c").contiguous() # keep original code for debugging
 q = q.permute(0, 2, 3, 1).reshape(b, 1, h*w, c).contiguous()
+
+[INPUT]
+images = rearrange(images, "b n h w c -> b n c h w")
+[OUTPUT]
+# images = rearrange(images, "b n h w c -> b n c h w")  #keep original code for debugging
+images = images.permute(0, 1, 4, 2, 3)
+
+[INPUT]
+images = repeat(images, "h w -> h w c", c=3)
+[OUTPUT]
+# images = repeat(images, "h w -> h w c", c=3)  #keep original code for debugging
+images = images.unsqueeze(-1).broadcast_to((*image.shape[:2], 3))
+
+Be cautious about the variable names for shapes, as they may overwrite other existing variables. Try to name the shape variables specifically, for example: 
+[INPUT]
+img_ids = repeat(img_ids, "h w c -> b (h w) c", b=bs) 
+[OUTPUT]
+# img_ids = repeat(img_ids, "h w c -> b (h w) c", b=bs) #keep original code for debugging
+img_ids_h, img_ids_w, _ = img_ids.shape
+img_ids = img_ids.reshape(1, img_ids_h, img_ids_w, 3).broadcast_to((bs, img_ids_h, img_ids_w, 3))
+img_ids = img_ids.reshape(bs, img_ids_h*img_ids_w, 3)
+
 
 ### **API mapping rules**
 
