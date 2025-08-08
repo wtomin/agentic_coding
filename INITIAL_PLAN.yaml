@@ -5,11 +5,15 @@ parameters:
   - id: output_folder
     description: "The path to the folder containing partially converted Python scripts."
     type: "string"
+  - id: output_test_folder
+    description: "The path to the folder for the output test script."
+    type: "string"
 
 goal: Edit partially converted Python scripts in a user-provided output folder to complete the conversion to MindSpore, and write test scripts.
 
 directories:
   outputs: ${output_folder}
+  test_outputs: ${output_test_folder}
   examples: examples_cohere2
 
 workflow:
@@ -19,6 +23,9 @@ workflow:
       - type: prompt
         parameter: output_folder
         message: "Please provide the path to the folder containing the partially converted Python scripts."
+      - type: prompt
+        parameter: output_test_folder
+        message: "Please provide the folder path for the output test script."
 
   - id: 2
     name: Edit partially converted scripts
@@ -47,7 +54,7 @@ workflow:
     preconditions:
       - Configuration file exists in the provided output folder
     actions:
-      - Write a MindSpore test script for each converted modeling file
+      - Write a MindSpore test script for each converted modeling file and save it to the output test folder
       - Use reduced sizes for quick tests:
           batch_size: small
           vocab_size: small
@@ -65,7 +72,7 @@ outputs:
   - type: mindspore_modeling_script
     description: Same functionality as Torch modeling scripts; file count and names align
   - type: mindspore_test_script
-    description: Tests that MindSpore and Torch models behave identically on the same inputs
+    description: Tests that MindSpore and Torch models behave identically on the same inputs and saves the script to the specified output test folder.
 
 special_handling:
   - condition: MindSpore scripts already exist in the provided output folder
