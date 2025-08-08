@@ -40,10 +40,12 @@ mv example_inputs/ inputs/
 python auto_convert.py --src_root ./inputs --dst_root ./outputs  # partially convert torch scripts to mindspore
 ```
 
-Then, start the conversion with your coding agent like this:
-```
-Follow the instruction in @INITIAL_PLAN.md and start the code conversion task.
-```
+Then, choose one of the methods below to drive the conversion with your coding agent (details in the next section):
+
+- Method A: Single-file plan using `INITIAL_PLAN.yaml`
+- Method B: Three-stage plan using `plans/*.yaml` in one chat/thread
+
+See “Running the conversion with an LLM agent” below.
 
 ## Project Structure
 
@@ -63,8 +65,77 @@ agentic_coding/
 │   └── quant_modules.py
 ├── CLAUDE.md              # Detailed conversion rules and guidelines
 ├── INITIAL_PLAN.md        # Project workflow and methodology
+├── INITIAL_PLAN.yaml      # Single-file executable plan for LLM agents
+├── plans/                 # Three-task orchestrated plans for LLM agents
+│   ├── 00_index.yaml
+│   ├── 10_convert_modeling.yaml
+│   ├── 20_write_tests.yaml
+│   └── 30_validate_conversion.yaml
 └── README.md              # This file
 ```
+
+## Running the conversion with an LLM agent
+
+There are two recommended ways to orchestrate the conversion with an LLM agent. Pick one based on your agent’s context window and autonomy.
+
+### Method A — Single-file plan (simplest)
+- **What to feed**: `INITIAL_PLAN.yaml`
+- **When to use**: You want a single, self-contained plan and your agent can keep a medium-sized context.
+- **How**:
+  - If your agent can read files by path: instruct it to load `INITIAL_PLAN.yaml` and execute the workflow.
+  - If not, paste the contents of `INITIAL_PLAN.yaml` into the chat.
+
+Example kickoff prompt:
+
+```text
+Load `INITIAL_PLAN.yaml` and execute the workflow end to end. Use the examples in `examples/` as references, and run code conversion task as described.
+```
+
+Pros:
+- **Simple**: one artifact drives the whole process
+- **Self-contained**: includes workflow, references, and outputs description
+
+Trade-offs:
+- **Context usage**: keeps the entire plan in the agent’s context throughout
+
+### Method B — Three-stage plan (memory-efficient, recommended for long projects)
+- **What to feed**: Use one chat/thread and feed the index first, then each sub-task YAML sequentially:
+  1) `plans/00_index.yaml` (orchestration overview)
+  2) `plans/10_convert_modeling.yaml` (convert modeling scripts)
+  3) `plans/20_write_tests.yaml` (author tests)
+  4) `plans/30_validate_conversion.yaml` (validate conversion)
+- **When to use**: You want to minimize context size and enforce stage gating.
+- **How**: Advance to the next YAML only after the agent completes the current task and reports artifacts.
+
+Kickoff sequence:
+
+```text
+Load `plans/00_index.yaml`. Start with task `convert_modeling_scripts` using `plans/10_convert_modeling.yaml`.
+- Use `examples/modeling_cohere2_torch.py` and `examples/modeling_cohere2.py` as references.
+Report when conversion artifacts are ready.
+```
+
+Then proceed:
+
+```text
+Now execute `plans/20_write_tests.yaml`.
+- Use `examples/configuration_cohere2.py` and `examples/test_modeling_cohere2.py` as references.
+Run tests with reduced configs; report results.
+```
+
+Finally:
+
+```text
+Execute `plans/30_validate_conversion.yaml`.
+Run AST/import/API/rules checks, and parity checks if Torch refs are available. Share validation reports.
+```
+
+Pros:
+- **Lower context load**: only the current task is in context
+- **Clear boundaries**: easier to debug and review stage outputs
+
+Trade-offs:
+- **More steps**: you advance the plan between stages
 
 ## Usage Examples
 

@@ -1,0 +1,82 @@
+version: 1.0
+name: run_code_conversion
+
+goal: Convert PyTorch Python scripts to MindSpore Python scripts and write test scripts.
+
+directories:
+  inputs: inputs
+  outputs: output
+  examples: examples
+
+workflow:
+  - id: 1
+    name: Inspect output folder
+    actions:
+      - Read `output` folder
+    branches:
+      if_output_empty:
+        - Read all input files under `inputs`
+        - Convert PyTorch scripts to MindSpore scripts
+      if_output_not_empty:
+        - Treat files in `output` as partially converted MindSpore scripts
+        - Skip reading `inputs`
+        - Continue conversion using diffs
+        - Always request human evaluation
+
+  - id: 2
+    name: Validate each converted file
+    checks:
+      - Python AST syntax validation
+      - Import resolution check
+      - Basic MindSpore API compatibility check
+      - Cross-reference with conversion rules
+
+  - id: 3
+    name: Review examples as references
+    actions:
+      - Read all files under `examples`
+      - Use `cohere2` example as reference for configuration and tests
+
+  - id: 4
+    name: Author test scripts
+    preconditions:
+      - Configuration file exists in `output`
+    actions:
+      - Write a MindSpore test script for each converted modeling file
+      - Use reduced sizes for quick tests:
+          batch_size: small
+          vocab_size: small
+          num_hidden_layers: small
+          hidden_size: small
+          max_position_embeddings: small
+
+inputs:
+  - type: torch_modeling_script
+    description: Defines the model architecture (may span multiple files)
+  - type: torch_configuration_file
+    description: Defines configuration arguments and default values
+
+outputs:
+  - type: mindspore_modeling_script
+    description: Same functionality as Torch modeling scripts; file count and names align
+  - type: mindspore_test_script
+    description: Tests that MindSpore and Torch models behave identically on the same inputs
+
+special_handling:
+  - condition: MindSpore scripts already exist in `output`
+    handling:
+      - Treat as partially converted from PyTorch to MindSpore
+      - Complete remaining edits using diffs
+      - Always ask for human evaluation
+
+references:
+  model: cohere2
+  files:
+    - path: examples/configuration_cohere2.py
+      role: Model configuration (shared by MindSpore and PyTorch)
+    - path: examples/modeling_cohere2_torch.py
+      role: PyTorch modeling script
+    - path: examples/modeling_cohere2.py
+      role: MindSpore modeling script
+    - path: examples/test_modeling_cohere2.py
+      role: MindSpore test script

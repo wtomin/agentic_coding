@@ -1,0 +1,24 @@
+version: 1.0
+name: plan_index_three_tasks
+
+summary: Orchestrates three tasks: convert modeling scripts, write tests, validate conversion.
+
+directories:
+  inputs: ../inputs
+  outputs: ../output
+  examples: ../examples
+
+sub_tasks:
+  - id: convert_modeling_scripts
+    file: 10_convert_modeling.yaml
+    run: sequential
+  - id: write_test_scripts
+    file: 20_write_tests.yaml
+    run: sequential
+    depends_on:
+      - convert_modeling_scripts
+  - id: validate_conversion
+    file: 30_validate_conversion.yaml
+    run: sequential
+    depends_on:
+      - write_test_scripts
