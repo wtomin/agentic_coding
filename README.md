@@ -38,19 +38,19 @@ mindone/
 Decide the target model name (e.g., `bert`).
 Place the PyTorch model code and configuration files in:
 ```
-mindone/mindone/transformers/models/{model-name}/
+mindone/mindone/transformers/models/bert/
 ```
 There should be at least:
-- `configuration_{model-name}.py`
-- `modeling_{model-name}.py`
+- `configuration_bert.py`
+- `modeling_bert.py`
 - `__init__.py`
 
 ## Run Rule-based Conversion
 
 Run the following commands to perform rule-based conversion and update the model folder:
 ```bash
-python auto_convert.py --src_root mindone/mindone/transformers/models/{model-name}/ --dst_root mindone/mindone/transformers/models/{model-name}_ms/
-mv mindone/mindone/transformers/models/{model-name}_ms/ mindone/mindone/transformers/models/{model-name}/
+python auto_convert.py --src_root mindone/mindone/transformers/models/bert/ --dst_root mindone/mindone/transformers/models/bert_ms/
+mv mindone/mindone/transformers/models/bert_ms/ mindone/mindone/transformers/models/bert/
 ```
 
 ## Edit the Plans for Your Model
@@ -69,7 +69,7 @@ Instruct your coding agent as follows:
 
 ```bash
 ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ >   Convert the modeling script following `plans/phase1_modeling_convert.md`.                                        │
+│ >   Convert the modeling script following @plans/phase1_modeling_convert.md.                                         │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -77,7 +77,7 @@ Instruct your coding agent as follows:
 
 ```bash
 ╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
-│ >   Write the test script following `plans/phase2_test_scrip.md`.                                                    │
+│ >   Write the test script following @plans/phase2_test_scrip.md.                                                     │
 ╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
