@@ -1,4 +1,4 @@
-# Agentic Coding：PyTorch 到 MindSpore 转换器（中文版）
+# Agentic Coding：PyTorch 到 MindSpore 转换
 
 [English](README.md) | [中文](README_CN.md)
 
