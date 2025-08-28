@@ -4,6 +4,23 @@
 
 An agentic tool for automated conversion of PyTorch code to MindSpore, allowing various inputs.
 
+## Installation
+
+### Prerequisites
+- Python 3.7 or higher
+- PyTorch (for testing and validation)
+- MindSpore (target framework)
+- Coding Agent (such as Claude or Cursor)
+
+### Dependencies
+Install the required dependencies:
+
+```bash
+pip install libcst # For rule-based auto-conversion
+pip install torch  # For validation purposes
+pip install mindspore  # Target framework
+```
+
 ## Overview
 
 This project provides a comprehensive solution for converting PyTorch-based machine learning code to MindSpore, with a focus on maintaining code functionality while adapting to MindSpore's implementation. The tool uses a combination of AST (Abstract Syntax Tree) transformation and pattern matching to ensure accurate conversions. Besides, it utilizes AI coding agent to deal with complex conversion cases.

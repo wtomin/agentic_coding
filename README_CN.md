@@ -6,6 +6,22 @@
 
 本项目是一个自动化的 PyTorch 到 MindSpore 代码转换工具，支持多种输入方式，旨在最大程度保持代码功能和结构的同时，适配 MindSpore 实现。工具基于 AST（抽象语法树）转换和模式匹配，确保高质量转换。并且利用AI coding agent的代码能力，对复杂转换的情况进行处理。
 
+## 安装说明
+
+### 先决条件
+- Python 3.7 及以上
+- PyTorch（用于测试和验证）
+- MindSpore（目标框架）
+- 智能体（如 Claude 或 Cursor）
+
+### 依赖安装
+安装所需依赖：
+```bash
+pip install libcst # 规则自动转换
+pip install torch  # 验证用
+pip install mindspore  # 目标框架
+```
+
 ## 快速开始
 
 1. 准备待转换的 PyTorch 仓库：
