@@ -1,10 +1,12 @@
+[English](README.md) | [中文](README_CN.md)
+
 # Agentic Code Conversion Tool
 
 An agentic tool for automated conversion of PyTorch code to MindSpore, allowing various inputs.
 
 ## Overview
 
-This project provides a comprehensive solution for converting PyTorch-based machine learning code to MindSpore, with a focus on maintaining code functionality while adapting to MindSpore's implementation. The tool uses a combination of AST (Abstract Syntax Tree) transformation and pattern matching to ensure accurate conversions.
+This project provides a comprehensive solution for converting PyTorch-based machine learning code to MindSpore, with a focus on maintaining code functionality while adapting to MindSpore's implementation. The tool uses a combination of AST (Abstract Syntax Tree) transformation and pattern matching to ensure accurate conversions. Besides, it utilizes AI coding agent to deal with complex conversion cases.
 
 ## Quick Start
 
