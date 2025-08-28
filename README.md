@@ -1,6 +1,28 @@
 # Agentic Coding: PyTorch to MindSpore Converter
 
+[English](README.md) | [中文](README_CN.md)
+
+# Introduction
+
 An automated code conversion tool that transforms PyTorch models and configurations to MindSpore, especially designed for `transformers`.
+
+## Installation
+
+### Prerequisites
+- Python 3.7 or higher
+- PyTorch (for testing and validation)
+- MindSpore (target framework)
+- Coding Agent (such as Claude or Cursor)
+
+### Dependencies
+Install the required dependencies:
+
+```bash
+pip install libcst # For rule-based auto-conversion
+pip install torch  # For validation purposes
+pip install mindspore  # Target framework
+```
+
 
 # Quick Integration with mindone
 
@@ -83,22 +105,6 @@ Instruct your coding agent as follows:
 
 ---
 
-## Installation
-
-### Prerequisites
-- Python 3.7 or higher
-- PyTorch (for testing and validation)
-- MindSpore (target framework)
-- Coding Agent (such as Claude or Cursor)
-
-### Dependencies
-Install the required dependencies:
-
-```bash
-pip install libcst # For rule-based auto-conversion
-pip install torch  # For validation purposes
-pip install mindspore  # Target framework
-```
 
 ## Documentation
 
